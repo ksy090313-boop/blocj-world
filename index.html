@@ -313,6 +313,25 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
 #dlg.cine #dlg-box::before,#dlg.cine #dlg-box::after,#dlg.cine #dlg-name{display:none}
 #dlg.cine #dlg-text{font-size:clamp(20px,3.4vw,28px);letter-spacing:1px;text-shadow:0 0 18px rgba(170,140,255,.55)}
 #dlg.cine #dlg-next{position:static;margin-top:16px;color:#9d93c9}
+
+/* ---- multiplayer */
+.btn.mpbtn{background:linear-gradient(#4f8fe0,#3a6fc0);border-bottom-color:#22457c}
+.mpcode-in{text-transform:uppercase;letter-spacing:6px;text-align:center;font-size:26px!important}
+.mpcodebox{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:6px 0 8px}
+.mpcodebox small{font-size:14px;color:#aab6c9;white-space:nowrap}
+.mpcodebox b{flex:1;font:34px 'Black Han Sans',var(--ui);letter-spacing:7px;color:#ffe08a;text-align:center;-webkit-user-select:text;user-select:text}
+.mpstat{font-size:15px;color:#aab6c9;margin:6px 0;line-height:1.4;text-align:center}
+.mpstat.err{color:#ff9a8f}.mpstat.ok{color:#9be08a}
+.mplist{display:flex;flex-direction:column;gap:5px;margin:4px 0 8px;max-height:30vh;overflow:auto}
+.mplist div{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.06);border-radius:9px;padding:6px 10px;font-size:17px}
+.mplist i,#mp-hud i{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none}
+.mplist small{margin-left:auto;color:#8e9bb0;font-size:13px}
+#mp-hud{position:fixed;right:calc(10px + var(--sar));top:calc(10px + var(--sat));background:rgba(14,16,26,.6);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px;line-height:1.5;pointer-events:none;max-width:44vw}
+#mp-hud b{color:#ffe08a;letter-spacing:1px}
+#mp-hud div{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.touchui #mp-hud{top:calc(66px + var(--sat))}
+body.talking #mp-hud{visibility:hidden}
+#cmd-log div.chat{background:rgba(20,30,60,.62)}
 </style>
 </head>
 <body>
@@ -337,6 +356,7 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
   <div id="quest" class="hidden"><div class="qh">📜 목표</div><div id="quest-text"></div><div id="quest-dir"><i id="quest-arrow"></i><span id="quest-dist"></span></div></div>
   <div id="talk-hint" class="hidden"></div>
   <div id="region-title"><b></b><small></small></div>
+  <div id="mp-hud" class="hidden"></div>
 </div>
 <div id="dlg-shade" class="hidden"></div>
 <div id="dlg" class="hidden"><div id="dlg-box"><div id="dlg-name"></div><div id="dlg-text"></div><div id="dlg-choices" class="hidden"></div><div id="dlg-next">▼</div></div></div>
@@ -354,6 +374,7 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
   <button class="tbtn" id="t-sneak" aria-label="웅크리기"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zM8 10h8l-1 6h3v2H6v-2h3z"/></svg></button>
   <button class="tbtn" id="t-fly" aria-label="비행"><svg viewBox="0 0 24 24"><path fill="#fff" d="M2 13c3-1 5-4 6-7 1 3 2 5 4 6 2-1 3-3 4-6 1 3 3 6 6 7-3 1-6 1-8 4-1-2-1.5-2.5-2-3-.5.5-1 1-2 3-2-3-5-3-8-4z"/></svg></button>
   <div class="ttop">
+    <button class="tbtn hidden" id="t-chat" aria-label="채팅"><svg viewBox="0 0 24 24"><path fill="#fff" d="M4 4h16a2 2 0 012 2v9a2 2 0 01-2 2H10l-5 4v-4H4a2 2 0 01-2-2V6a2 2 0 012-2zm3 5.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg></button>
     <button class="tbtn" id="t-view" aria-label="시점"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 5c5 0 9 4.5 10 7-1 2.5-5 7-10 7S3 14.5 2 12c1-2.5 5-7 10-7zm0 3a4 4 0 100 8 4 4 0 000-8z"/></svg></button>
     <button class="tbtn" id="t-inv" aria-label="인벤토리"><svg viewBox="0 0 24 24"><path fill="#fff" d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg></button>
     <button class="tbtn" id="t-pause" aria-label="일시정지"><svg viewBox="0 0 24 24"><path fill="#fff" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg></button>
@@ -366,10 +387,11 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
   <div class="subtitle">VOXEL SANDBOX</div>
   <div class="menu">
     <button class="btn primary" data-act="worlds"><svg viewBox="0 0 24 24"><path fill="#fff" d="M7 4l13 8-13 8z"/></svg>플레이</button>
+    <button class="btn mpbtn" data-act="mp"><svg viewBox="0 0 24 24"><path fill="#fff" d="M8.5 4a3.5 3.5 0 110 7 3.5 3.5 0 010-7zm8 1.5a3 3 0 110 6 3 3 0 010-6zM2 19c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6v1H2zm14-5.3c3.3 0 6 2 6 5.3v1h-5v-1c0-2-.4-3.7-1.6-5.2z"/></svg>친구와 함께</button>
     <button class="btn" data-act="settings"><svg viewBox="0 0 24 24"><g fill="#fff"><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(0 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(45 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(90 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(135 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(180 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(225 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(270 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="5.6" fill="none" stroke="#fff" stroke-width="3.4"/></svg>설정</button>
     <button class="btn" data-act="help"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 14.5a1.3 1.3 0 100 2.6 1.3 1.3 0 000-2.6zM12 5.5c-2.3 0-4 1.5-4 3.6h2.4c0-.8.7-1.4 1.6-1.4s1.6.6 1.6 1.4c0 1.6-2.8 1.6-2.8 4.4h2.4c0-1.9 2.8-2.2 2.8-4.6 0-2-1.7-3.4-4-3.4z"/></svg>조작법</button>
   </div>
-  <div class="ver">v1.5</div>
+  <div class="ver">v1.6</div>
   <div class="foot">특정 게임과 무관한 오리지널 복셀 샌드박스 · 모든 텍스처와 소리는 코드로 생성됩니다</div>
 </div>
 
@@ -404,6 +426,36 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
   </div>
 </div>
 
+<div id="scr-mpjoin" class="screen dim">
+  <div class="panel">
+    <h2>친구 방 참가</h2>
+    <label class="field"><span>내 이름</span><input type="text" id="mpj-name" maxlength="12" placeholder="이름"></label>
+    <label class="field"><span>방 코드 (친구에게 받은 6자리)</span><input type="text" id="mpj-code" class="mpcode-in" maxlength="7" placeholder="예: K7QX2M" autocapitalize="characters" spellcheck="false"></label>
+    <button class="btn primary" data-act="join" id="mpj-go">참가하기</button>
+    <div class="mpstat hidden" id="mpj-status"></div>
+    <div class="hint">방을 여는 친구는 자기 월드에 들어가서 <b>일시정지 → 친구 초대</b>를 누르면 코드가 나와요. 서로 다른 와이파이나 데이터로도 접속할 수 있어요.</div>
+    <button class="btn ghost" data-act="back">뒤로</button>
+  </div>
+</div>
+
+<div id="scr-mphost" class="screen dim">
+  <div class="panel">
+    <h2>멀티플레이</h2>
+    <div id="mph-off">
+      <label class="field"><span>내 이름</span><input type="text" id="mph-name" maxlength="12" placeholder="이름"></label>
+      <div class="hint" style="margin-bottom:8px">방을 열면 지금 이 월드에 친구가 최대 7명까지 들어올 수 있어요. 월드는 내 기기에 그대로 저장돼요.</div>
+      <button class="btn primary" data-act="open">🌐 방 열기</button>
+    </div>
+    <div id="mph-on" class="hidden">
+      <div class="mpcodebox"><small id="mph-codelbl">방 코드</small><b id="mph-code">······</b><button class="btn small" data-act="copy" id="mph-copy">복사</button></div>
+      <div class="mpstat" id="mph-status"></div>
+      <div class="mplist" id="mph-list"></div>
+      <button class="btn danger" data-act="close" id="mph-close">방 닫기</button>
+    </div>
+    <button class="btn ghost" data-act="back">돌아가기</button>
+  </div>
+</div>
+
 <div id="scr-loading" class="screen">
   <div class="logo" style="font-size:clamp(40px,9vw,76px)"><span class="back">블록 월드</span><span class="front">블록 월드</span></div>
   <div class="bar"><div id="load-bar"></div></div>
@@ -423,9 +475,12 @@ body.talking #crosshair,body.talking #hotbar,body.talking #bars,body.talking #it
       <button class="btn" data-act="mode" id="pause-mode">모드 전환</button>
       <button class="btn" data-act="spawn">스폰으로</button>
     </div>
-    <button class="btn" data-act="settings">설정</button>
-    <button class="btn" data-act="help">조작법</button>
-    <button class="btn danger" data-act="quit">저장하고 나가기</button>
+    <button class="btn mpbtn" data-act="mp" id="pause-mp"><svg viewBox="0 0 24 24"><path fill="#fff" d="M8.5 4a3.5 3.5 0 110 7 3.5 3.5 0 010-7zm8 1.5a3 3 0 110 6 3 3 0 010-6zM2 19c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6v1H2zm14-5.3c3.3 0 6 2 6 5.3v1h-5v-1c0-2-.4-3.7-1.6-5.2z"/></svg>친구 초대 · 멀티플레이</button>
+    <div class="row2">
+      <button class="btn" data-act="settings">설정</button>
+      <button class="btn" data-act="help">조작법</button>
+    </div>
+    <button class="btn danger" data-act="quit" id="pause-quit">저장하고 나가기</button>
     <div class="hint" id="pause-info" style="text-align:center"></div>
     <button class="btn ghost small" data-act="seed" style="margin:8px auto 0;display:flex">시드 복사</button>
   </div>
@@ -2625,6 +2680,7 @@ class World {
     if (c.state >= ST_LIT) this.relight(c, x, y, z, old, id);
     this._touch(c, lx, lz);
     if (this.onEdit) this.onEdit(x, y, z);
+    if (this.onNet) this.onNet(x, y, z, id);
     return true;
   }
 
@@ -5444,7 +5500,7 @@ const DEFAULT_HOTBAR = ['grass', 'dirt', 'stone', 'cobblestone', 'oak_planks', '
 
 // ------------------------------------------------------------------ player model (3rd person)
 class PlayerModel {
-  constructor(scene) {
+  constructor(scene, hoodie = 0xe8794a) {
     this.group = new THREE.Group();
     this.mat = new THREE.MeshBasicMaterial({ vertexColors: true });
     const part = (w, h, d, color, pivotY, faces) => {
@@ -5466,10 +5522,10 @@ class PlayerModel {
     this.legL = part(0.21, 0.62, 0.23, 0x2d3e5c, 0, [null, null, null, 0x3a2c22, null, null]);
     this.legR = part(0.21, 0.62, 0.23, 0x2d3e5c, 0, [null, null, null, 0x3a2c22, null, null]);
     this.legL.position.set(-0.115, 0.62, 0); this.legR.position.set(0.115, 0.62, 0);
-    this.body = part(0.5, 0.58, 0.3, 0xe8794a, 0.58);
+    this.body = part(0.5, 0.58, 0.3, hoodie, 0.58);
     this.body.position.set(0, 0.62, 0);
-    this.armL = part(0.16, 0.56, 0.18, 0xe8794a, 0, [null, null, null, 0xf1c79b, null, null]);
-    this.armR = part(0.16, 0.56, 0.18, 0xe8794a, 0, [null, null, null, 0xf1c79b, null, null]);
+    this.armL = part(0.16, 0.56, 0.18, hoodie, 0, [null, null, null, 0xf1c79b, null, null]);
+    this.armR = part(0.16, 0.56, 0.18, hoodie, 0, [null, null, null, 0xf1c79b, null, null]);
     this.armL.position.set(-0.335, 1.18, 0); this.armR.position.set(0.335, 1.18, 0);
     this.head = new THREE.Group(); this.head.position.set(0, 1.2, 0);
     const skull = part(0.54, 0.54, 0.54, 0xf1c79b, 0.54); this.head.add(skull);
@@ -5705,7 +5761,7 @@ class Game {
     this.ui.showHUD(false);
   }
   startWorld(id, fresh) {
-    const data = store.get('bw.w.' + id, null);
+    const data = this.mpBoot || store.get('bw.w.' + id, null);
     const m = fresh || (data ? data.meta : null) || store.get('bw.index', []).find((w) => w.id === id);
     if (!m) { this.ui.toast('월드를 불러올 수 없어요'); return; }
     this.sound.init();
@@ -5756,6 +5812,7 @@ class Game {
   }
   save() {
     if (!this.meta || !this.world || this.state === 'loading') return;
+    if (String(this.meta.id).startsWith('mp-')) return; // a guest's copy of the host's world is never saved
     const p = this.player;
     const data = {
       v: 1, meta: this.meta, mode: p.mode, time: this.time, spawn: this.spawn,
@@ -6406,7 +6463,7 @@ class Game {
     if (inp.touchMode && this.settings.aim !== 'center' && now() > inp.aimUntil && inp.lookId === null) showSel = false;
     this.renderer.showSelection(showSel ? hit : null, crack, hit ? this.lightAt(hit.x + hit.nx + 0.5, hit.y + hit.ny + 0.5, hit.z + hit.nz + 0.5) : 1);
   }
-  swing() { this.swingT = 0; }
+  swing() { this.swingT = 0; this.swingSeq = ((this.swingSeq || 0) + 1) & 255; }
   canStay(id, x, y, z) {
     const w = this.world;
     if (RTT[id] === RT.TORCH) {
@@ -7421,7 +7478,7 @@ class Game {
     const facing = ['북(-Z)', '서(-X)', '남(+Z)', '동(+X)'][((Math.round(p.yaw / (Math.PI / 2)) % 4) + 4) % 4];
     const tg = this.target ? `${BLOCKS[this.target.id].name} (${this.target.x}, ${this.target.y}, ${this.target.z})` : '-';
     this.ui.setDebug(
-      `블록 월드 v1.5   ${this.fps} fps\n` +
+      `블록 월드 v1.6   ${this.fps} fps\n` +
       `XYZ  ${p.x.toFixed(2)} / ${p.y.toFixed(2)} / ${p.z.toFixed(2)}\n` +
       `블록 ${bx} ${by} ${bz}   청크 ${bx >> 4} ${bz >> 4}\n` +
       `방향 ${facing}   바이옴 ${BIOME_NAMES[w.biomeAt(bx, bz)] || '-'}\n` +
@@ -8441,6 +8498,801 @@ class Adventure {
     ])];
   }
   pickLine(lines) { return { t: lines[(this.st.talks + Math.floor(Math.random() * lines.length)) % lines.length] }; }
+}
+
+// ---- 16_multiplayer.js
+// ============================================================================
+//  16_multiplayer.js — play together online. One player hosts their world and
+//  gets a 6-letter room code; friends join with it. The host's world is the
+//  truth: guests receive its seed + every edit, then block changes, player
+//  positions, time of day, weather and chat stream both ways.
+//
+//  Transport: WebRTC data channels via PeerJS (direct, with PeerJS' public
+//  STUN/TURN), and as a fallback a relay through a public MQTT-over-WebSocket
+//  broker for networks where WebRTC can't get through. Both carry the same
+//  JSON messages, chunked when large. The host listens on both at once.
+// ============================================================================
+const MP_PROTO = 1;
+const MP_MAX = 8;
+const MP_CHUNK = 12000;
+const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const MP_COLORS = [0xe8794a, 0x4a9be8, 0x5cc65a, 0xc85ad6, 0xe8c64a, 0x3fc9c0, 0xe84a7a, 0x9a8af0];
+const MP_TIMEOUT = 20000;
+const MP_CFG = (() => {
+  const q = new URLSearchParams(location.search);
+  const pe = q.get('mppeer'), re = q.get('mprelay');
+  return {
+    // ?mppeer=host:port points at a self-hosted PeerServer, ?mprelay=ws://… at another broker (used by the tests)
+    peer: pe ? { host: pe.split(':')[0], port: +(pe.split(':')[1] || 9000), path: '/', secure: false } : {},
+    relays: re ? [re] : ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'],
+    noP2P: q.has('mpnop2p'), noRelay: q.has('mpnorelay'),
+  };
+})();
+const mpHex = (c) => '#' + c.toString(16).padStart(6, '0');
+const mpEsc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mpName = (s) => (String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 12) || '플레이어');
+const mpCodeNorm = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/O/g, '0').replace(/I/g, '1').slice(0, 6);
+const mpNewCode = () => { const u = new Uint32Array(6); crypto.getRandomValues(u); let s = ''; for (const v of u) s += MP_ALPHA[v % MP_ALPHA.length]; return s; };
+
+// ------------------------------------------------------------------ PeerJS loader (bundled copy first, then CDNs)
+let mpPeerLib = null;
+function mpLoadPeer() {
+  if (window.Peer) return Promise.resolve(window.Peer);
+  if (mpPeerLib) return mpPeerLib;
+  const urls = ['./peerjs.min.js', 'https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js', 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js'];
+  mpPeerLib = (async () => {
+    for (const u of urls) {
+      try {
+        await new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = () => { s.remove(); rej(new Error(u)); }; document.head.appendChild(s); });
+        if (window.Peer) return window.Peer;
+      } catch (e) { /* next */ }
+    }
+    throw new Error('peerjs unavailable');
+  })();
+  mpPeerLib.catch(() => { mpPeerLib = null; });
+  return mpPeerLib;
+}
+
+// ------------------------------------------------------------------ a message pipe: JSON objects in and out, chunked when large
+class MPLink {
+  constructor(kind, sendRaw, closeRaw) {
+    this.kind = kind; this._send = sendRaw; this._close = closeRaw;
+    this.onmsg = null; this.onclose = null;
+    this.parts = new Map(); this.closed = false; this.last = now();
+    this.pid = 0;
+  }
+  send(obj) {
+    if (this.closed) return;
+    const s = JSON.stringify(obj);
+    try {
+      if (s.length <= MP_CHUNK) { this._send(s); return; }
+      const id = Math.random().toString(36).slice(2, 8), n = Math.ceil(s.length / MP_CHUNK);
+      for (let i = 0; i < n; i++) this._send(`#${id}|${i}|${n}|` + s.slice(i * MP_CHUNK, (i + 1) * MP_CHUNK));
+    } catch (e) { this.fail(); }
+  }
+  recv(s) {
+    if (this.closed || typeof s !== 'string' || !s) return;
+    this.last = now();
+    if (s.charCodeAt(0) === 35) { // '#': a chunk of a larger message
+      const a = s.indexOf('|'), b = s.indexOf('|', a + 1), c = s.indexOf('|', b + 1);
+      if (a < 0 || b < 0 || c < 0) return;
+      const id = s.slice(1, a), i = +s.slice(a + 1, b), n = +s.slice(b + 1, c);
+      if (!(n > 0 && n <= 4000 && i >= 0 && i < n)) return;
+      let p = this.parts.get(id);
+      if (!p) { if (this.parts.size > 8) this.parts.clear(); p = { n, got: 0, a: new Array(n) }; this.parts.set(id, p); }
+      if (p.a[i] === undefined) { p.a[i] = s.slice(c + 1); p.got++; }
+      if (p.got < p.n) return;
+      this.parts.delete(id);
+      s = p.a.join('');
+    }
+    let m; try { m = JSON.parse(s); } catch (e) { return; }
+    if (m && typeof m === 'object' && typeof m.t === 'string' && this.onmsg) this.onmsg(m, this);
+  }
+  fail() {
+    if (this.closed) return;
+    this.closed = true;
+    try { this._close(); } catch (e) { /* already gone */ }
+    if (this.onclose) this.onclose(this);
+  }
+  close() { if (!this.closed) { try { this._send(JSON.stringify({ t: 'bye' })); } catch (e) { /* ignore */ } } this.fail(); }
+}
+
+// ------------------------------------------------------------------ a tiny MQTT 3.1.1 client over WebSocket (QoS 0 only)
+const mqTE = new TextEncoder(), mqTD = new TextDecoder();
+function mqStr(s) { const b = mqTE.encode(s); const o = new Uint8Array(2 + b.length); o[0] = b.length >> 8; o[1] = b.length & 255; o.set(b, 2); return o; }
+function mqPacket(type, parts) {
+  let len = 0; for (const p of parts) len += p.length;
+  const hdr = [type]; let x = len;
+  do { let d = x % 128; x = Math.floor(x / 128); if (x > 0) d |= 128; hdr.push(d); } while (x > 0);
+  const o = new Uint8Array(hdr.length + len); o.set(hdr, 0);
+  let k = hdr.length; for (const p of parts) { o.set(p, k); k += p.length; }
+  return o;
+}
+class MiniMQTT {
+  constructor(url) {
+    this.url = url; this.ws = null; this.buf = new Uint8Array(0);
+    this.onmessage = null; this.onclose = null; this.pid = 1; this.subs = new Map(); this.ping = 0; this.open = false;
+  }
+  connect(timeout = 7000) {
+    return new Promise((res, rej) => {
+      let done = false;
+      const fin = (ok, err) => { if (done) return; done = true; clearTimeout(to); if (ok) res(this); else { this.close(); rej(err || new Error('mqtt')); } };
+      const to = setTimeout(() => fin(false, new Error('mqtt timeout')), timeout);
+      let ws;
+      try { ws = new WebSocket(this.url, ['mqtt']); } catch (e) { fin(false, e); return; }
+      this.ws = ws; ws.binaryType = 'arraybuffer';
+      this._onConnack = (rc) => { if (rc === 0) { this.open = true; this.ping = setInterval(() => this._raw(new Uint8Array([0xC0, 0])), 25000); fin(true); } else fin(false, new Error('mqtt rc ' + rc)); };
+      ws.onopen = () => {
+        const cid = 'bw' + Math.random().toString(36).slice(2, 12);
+        this._raw(mqPacket(0x10, [mqStr('MQTT'), new Uint8Array([4, 0x02, 0, 60]), mqStr(cid)]));
+      };
+      ws.onmessage = (e) => this._data(new Uint8Array(e.data));
+      ws.onerror = () => fin(false, new Error('mqtt socket'));
+      ws.onclose = () => { const was = this.open; this.open = false; clearInterval(this.ping); fin(false, new Error('mqtt closed')); if (was && this.onclose) this.onclose(); };
+    });
+  }
+  _raw(u8) { if (this.ws && this.ws.readyState === 1) this.ws.send(u8); }
+  subscribe(topic) {
+    const id = this.pid = (this.pid % 65535) + 1;
+    return new Promise((res, rej) => {
+      const to = setTimeout(() => { this.subs.delete(id); rej(new Error('suback timeout')); }, 6000);
+      this.subs.set(id, () => { clearTimeout(to); res(); });
+      this._raw(mqPacket(0x82, [new Uint8Array([id >> 8, id & 255]), mqStr(topic), new Uint8Array([0])]));
+    });
+  }
+  publish(topic, str) { this._raw(mqPacket(0x30, [mqStr(topic), mqTE.encode(str)])); }
+  close() {
+    clearInterval(this.ping); this.open = false;
+    if (this.ws) { try { this._raw(new Uint8Array([0xE0, 0])); this.ws.close(); } catch (e) { /* ignore */ } }
+    this.ws = null;
+  }
+  _data(chunk) {
+    if (this.buf.length) { const b = new Uint8Array(this.buf.length + chunk.length); b.set(this.buf); b.set(chunk, this.buf.length); chunk = b; }
+    let o = 0;
+    for (;;) {
+      if (chunk.length - o < 2) break;
+      let mul = 1, len = 0, k = o + 1, byte;
+      do { if (k >= chunk.length) { len = -1; break; } byte = chunk[k++]; len += (byte & 127) * mul; mul *= 128; } while (byte & 128);
+      if (len < 0 || chunk.length - k < len) break;
+      this._packet(chunk[o], chunk.subarray(k, k + len));
+      o = k + len;
+    }
+    this.buf = o < chunk.length ? chunk.slice(o) : new Uint8Array(0);
+  }
+  _packet(h, b) {
+    const type = h >> 4;
+    if (type === 2) { if (this._onConnack) this._onConnack(b[1]); }
+    else if (type === 3) {
+      const tl = (b[0] << 8) | b[1]; const topic = mqTD.decode(b.subarray(2, 2 + tl));
+      let p = 2 + tl; if ((h >> 1) & 3) p += 2;
+      if (this.onmessage) this.onmessage(topic, mqTD.decode(b.subarray(p)));
+    } else if (type === 9) { const id = (b[0] << 8) | b[1]; const f = this.subs.get(id); if (f) { this.subs.delete(id); f(); } }
+  }
+}
+
+// ------------------------------------------------------------------ another player's body in the world
+class MPAvatar {
+  constructor(game, name, color) {
+    this.g = game; this.name = name; this.color = color;
+    this.model = new PlayerModel(game.renderer.scene, color);
+    this.tag = advSprite((x, w, h) => {
+      x.font = '30px "Do Hyeon", sans-serif';
+      const tw = Math.min(w - 20, x.measureText(name).width + 40);
+      const x0 = (w - tw) / 2;
+      x.fillStyle = 'rgba(10,12,20,.55)'; x.beginPath();
+      if (x.roundRect) x.roundRect(x0, 6, tw, h - 12, 12); else x.rect(x0, 6, tw, h - 12);
+      x.fill();
+      x.fillStyle = mpHex(color); x.fillRect(x0 + 12, h / 2 - 6, 12, 12);
+      x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText(name, x0 + 32, h / 2 + 1);
+    }, 320, 64, 1.75, 0.35);
+    game.renderer.scene.add(this.tag);
+    this.p = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, vx: 0, vz: 0, sneaking: false };
+    this.t = null; this.swing = 1; this.seq = -1; this.dead = false;
+  }
+  set(a) {
+    if (!Array.isArray(a) || a.length < 9) return;
+    for (let i = 0; i < 9; i++) if (typeof a[i] !== 'number' || !isFinite(a[i])) return;
+    const t = { x: a[0], y: a[1], z: a[2], yaw: a[3], pitch: a[4], vx: a[5], vz: a[6], fl: a[7] };
+    const p = this.p;
+    if (!this.t || Math.hypot(t.x - p.x, t.y - p.y, t.z - p.z) > 12) { p.x = t.x; p.y = t.y; p.z = t.z; p.yaw = t.yaw; p.pitch = t.pitch; }
+    this.t = t;
+    if (a[8] !== this.seq) { if (this.seq >= 0) this.swing = 0; this.seq = a[8]; }
+    this.dead = !!(t.fl & 4);
+  }
+  update(dt, visible) {
+    const t = this.t, p = this.p;
+    const show = visible && !!t && !this.dead;
+    this.model.group.visible = show; this.tag.visible = show;
+    if (!show) return;
+    const k = 1 - Math.exp(-dt * 14);
+    p.x += (t.x - p.x) * k; p.y += (t.y - p.y) * k; p.z += (t.z - p.z) * k;
+    p.yaw += wrapAng(t.yaw - p.yaw) * k; p.pitch += (t.pitch - p.pitch) * k;
+    p.vx = t.vx; p.vz = t.vz; p.sneaking = !!(t.fl & 1);
+    this.swing = Math.min(1, this.swing + dt * 4.2);
+    this.model.update(p, dt, this.g.lightAt(p.x, p.y + 1.4, p.z), this.swing < 1 ? this.swing : 0);
+    this.tag.position.set(p.x, p.y + (p.sneaking ? 1.95 : 2.12), p.z);
+  }
+  dispose() {
+    const sc = this.g.renderer.scene;
+    sc.remove(this.model.group); sc.remove(this.tag);
+    this.model.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+    if (this.model.faceMat.map) this.model.faceMat.map.dispose();
+    this.model.faceMat.dispose(); this.model.mat.dispose();
+    this.tag.material.map.dispose(); this.tag.material.dispose();
+  }
+}
+
+// ------------------------------------------------------------------ the session
+class Multiplayer {
+  constructor(game) {
+    this.g = game;
+    this.role = null;          // null | 'host' | 'client'
+    this.code = '';
+    this.myName = mpName(store.get('bw.mpname', '') || ('탐험가' + (10 + Math.floor(Math.random() * 90))));
+    this.players = new Map();  // id -> { id, name, color, link (host only), av }
+    this.applying = false;
+    this.outE = [];            // pending block edits: [origin, x, y, z, id, ...]
+    this.stT = 0; this.timeT = 0;
+    this.peer = null; this.relays = []; this.link = null; this.hostId = 0;
+    this.p2pUp = false; this.relayUp = 0;
+    this.nextId = 1;
+    this.joining = false;
+    this.bindUI();
+    setInterval(() => this.tick(), 50);
+  }
+  get active() { return this.role !== null; }
+  me() { return this.role === 'host' ? 0 : this.myId; }
+
+  // ---------------------------------------------------------------- world hooks
+  attachWorld() {
+    const w = this.g.world;
+    if (w) w.onNet = (x, y, z, id) => this.onLocalEdit(x, y, z, id);
+  }
+  onLocalEdit(x, y, z, id) {
+    if (this.applying || !this.role) return;
+    // guests only share what they did themselves (their simulations are previews; the host's are the truth)
+    if (this.role === 'client' && !this.g.mpCapture) return;
+    this.outE.push(this.me(), x, y, z, id);
+  }
+  applyEdits(e, origin) {
+    const g = this.g, w = g.world;
+    if (!w || !Array.isArray(e) || e.length % 4 || e.length > 40000) return false;
+    const n = BLOCKS.length;
+    this.applying = true;
+    try {
+      for (let j = 0; j < e.length; j += 4) {
+        const x = e[j], y = e[j + 1], z = e[j + 2], id = e[j + 3];
+        if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isInteger(z) || !Number.isInteger(id)) continue;
+        if (y < 0 || y >= CH || id < 0 || id >= n || !BLOCKS[id] || Math.abs(x) > 2000000 || Math.abs(z) > 2000000) continue;
+        const c = w.getChunk(x >> 4, z >> 4);
+        if (c && c.state >= ST_GEN) w.setBlock(x, y, z, id);
+        else {
+          const key = ckey(x >> 4, z >> 4), i = (y << 8) | ((z & 15) << 4) | (x & 15);
+          let m = w.edits.get(key); if (!m) { m = new Map(); w.edits.set(key, m); }
+          m.set(i, id); w.editsChanged = true;
+        }
+        const d = BLOCKS[id];
+        if (d.crop !== undefined && d.crop < 3) g.crops.set(x + ',' + y + ',' + z, [x, y, z]);
+        if (origin !== undefined && this.role === 'host') this.outE.push(origin, x, y, z, id);
+      }
+    } finally { this.applying = false; }
+    return true;
+  }
+
+  // ---------------------------------------------------------------- hosting
+  async host() {
+    const g = this.g;
+    if (this.role || !g.meta || !g.world) return;
+    this.role = 'host'; this.code = mpNewCode(); this.players.clear(); this.nextId = 1;
+    this.p2pUp = false; this.relayUp = 0; this.outE.length = 0;
+    this.attachWorld();
+    this._openedAt = now(); setTimeout(() => this.renderHost(), 12500);
+    this.renderHost(); this.renderHUD();
+    const code = this.code;
+    const tries = [];
+    if (!MP_CFG.noP2P) tries.push(this.hostP2P(code).catch((e) => console.warn('p2p host', e)));
+    if (!MP_CFG.noRelay) for (const url of MP_CFG.relays) tries.push(this.hostRelay(code, url).catch((e) => console.warn('relay host', url, e && e.message)));
+    await Promise.all(tries);
+    if (this.role === 'host' && this.code === code) this.renderHost();
+  }
+  async hostP2P(code) {
+    const Peer = await mpLoadPeer();
+    if (this.code !== code || this.role !== 'host') return;
+    await new Promise((res) => {
+      const peer = new Peer('bwv1-' + code, Object.assign({ debug: 0 }, MP_CFG.peer));
+      this.peer = peer;
+      let settled = false; const done = () => { if (!settled) { settled = true; res(); } };
+      setTimeout(done, 9000);
+      peer.on('open', () => { this.p2pUp = true; this.renderHost(); done(); });
+      peer.on('connection', (conn) => {
+        conn.on('open', () => {
+          const L = new MPLink('p2p', (s) => conn.send(s), () => { try { conn.close(); } catch (e) { /* ignore */ } });
+          conn.on('data', (d) => L.recv(d));
+          conn.on('close', () => L.fail());
+          conn.on('error', () => L.fail());
+          this.accept(L);
+        });
+      });
+      peer.on('disconnected', () => {
+        // lost the signalling server; open links keep working, but new friends can't find us until we reconnect
+        if (this.peer !== peer) return;
+        this.p2pUp = false; this.renderHost();
+        setTimeout(() => { if (this.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) { /* ignore */ } } }, 2500);
+      });
+      peer.on('error', (e) => { console.warn('peer', e && e.type); if (!peer.open) { this.p2pUp = false; this.renderHost(); done(); } });
+    });
+  }
+  async hostRelay(code, url) {
+    const mq = new MiniMQTT(url);
+    await mq.connect();
+    if (this.code !== code || this.role !== 'host') { mq.close(); return; }
+    const base = `bwv1/${code}/`;
+    const links = new Map();
+    mq.onmessage = (topic, s) => {
+      if (!topic.startsWith(base + 'h/')) return;
+      const cid = topic.slice(base.length + 2);
+      if (!/^[a-z0-9]{6,16}$/.test(cid)) return;
+      let L = links.get(cid);
+      if (!L) {
+        if (links.size > 64) for (const [k, v] of links) if (v.closed) links.delete(k);
+        L = new MPLink('relay', (x) => mq.publish(base + 'c/' + cid, x), () => {});
+        links.set(cid, L); this.accept(L);
+      }
+      L.recv(s);
+    };
+    mq.onclose = () => { this.relays = this.relays.filter((r) => r !== mq); this.relayUp = this.relays.length; for (const L of links.values()) L.fail(); this.renderHost(); };
+    await mq.subscribe(base + 'h/+');
+    this.relays.push(mq); this.relayUp = this.relays.length;
+    this.renderHost();
+  }
+  accept(L) {
+    L.onmsg = (m) => this.onHostMsg(L, m);
+    L.onclose = () => this.dropClient(L);
+    setTimeout(() => { if (!L.pid && !L.closed) L.fail(); }, 15000); // never said hello
+  }
+  onHostMsg(L, m) {
+    if (this.role !== 'host') return;
+    if (!L.pid) {
+      if (m.t !== 'hello') return;
+      if (m.v !== MP_PROTO) { L.send({ t: 'reject', why: '게임 버전이 달라요. 둘 다 앱을 새로고침해 최신 버전으로 맞춰 주세요.' }); setTimeout(() => L.fail(), 500); return; }
+      if (this.players.size + 1 >= MP_MAX) { L.send({ t: 'reject', why: `방이 가득 찼어요 (최대 ${MP_MAX}명)` }); setTimeout(() => L.fail(), 500); return; }
+      const g = this.g;
+      if (!g.world || !g.meta) return;
+      const id = L.pid = this.nextId++;
+      const name = mpName(m.name), color = MP_COLORS[id % MP_COLORS.length];
+      const pl = { id, name, color, link: L, av: new MPAvatar(g, name, color) };
+      // flush pending edits first so the snapshot and the stream line up
+      this.flushEdits();
+      const p = g.player;
+      L.send({
+        t: 'welcome', v: MP_PROTO, id, color, code: this.code,
+        meta: { name: g.meta.name, seed: g.meta.seed, seedText: g.meta.seedText, type: g.meta.type, mode: g.player.mode },
+        edits: g.world.serializeEdits(), time: g.time, wl: g.weather.level, wt: g.weather.target,
+        spawn: [p.x, p.y, p.z], host: { name: this.myName, color: MP_COLORS[0] },
+        players: [...this.players.values()].map((o) => ({ id: o.id, name: o.name, color: o.color })),
+      });
+      for (const o of this.players.values()) o.link.send({ t: 'join', id, name, color });
+      this.players.set(id, pl);
+      this.note(`${name} 님이 들어왔어요`, color);
+      this.g.sound.play('click');
+      this.renderHost(); this.renderHUD();
+      return;
+    }
+    const pl = this.players.get(L.pid);
+    if (!pl) return;
+    switch (m.t) {
+      case 's': pl.av.set(m.a); pl.st = m.a; break;
+      case 'b': this.applyEdits(m.e, L.pid); break;
+      case 'chat': {
+        const text = String(m.x || '').slice(0, 120).trim();
+        if (!text) break;
+        this.showChat(pl.name, pl.color, text);
+        for (const o of this.players.values()) if (o !== pl) o.link.send({ t: 'chat', n: pl.name, c: pl.color, x: text });
+        break;
+      }
+      case 'bye': L.fail(); break;
+    }
+  }
+  dropClient(L) {
+    const pl = this.players.get(L.pid);
+    if (!pl || pl.link !== L) return;
+    this.players.delete(L.pid);
+    pl.av.dispose();
+    for (const o of this.players.values()) o.link.send({ t: 'leave', id: pl.id });
+    if (this.role === 'host') this.note(`${pl.name} 님이 나갔어요`, pl.color);
+    this.renderHost(); this.renderHUD();
+  }
+
+  // ---------------------------------------------------------------- joining
+  async join(codeIn, name) {
+    if (this.role || this.joining) return;
+    const code = mpCodeNorm(codeIn);
+    if (code.length !== 6) { this.joinStatus('6자리 방 코드를 입력해 주세요', 'err'); return; }
+    this.myName = mpName(name); store.set('bw.mpname', this.myName);
+    this.joining = true; $('mpj-go').disabled = true;
+    try {
+      let w = null, link = null;
+      if (!MP_CFG.noP2P) {
+        this.joinStatus('친구의 방을 찾는 중…');
+        link = await this.tryP2P(code).catch((e) => { console.warn('p2p join', e && (e.type || e.message)); return null; });
+        if (link) { w = await this.handshake(link, 9000); if (!w || w.t !== 'welcome') { if (!w || w.t !== 'reject') link.fail(); } }
+      }
+      if ((!w || w.t !== 'welcome') && !(w && w.t === 'reject') && !MP_CFG.noRelay) {
+        for (const url of MP_CFG.relays) {
+          this.joinStatus('다른 경로로 연결하는 중…');
+          link = await this.tryRelay(code, url).catch((e) => { console.warn('relay join', url, e && e.message); return null; });
+          if (!link) continue;
+          w = await this.handshake(link, 8000);
+          if (w && (w.t === 'welcome' || w.t === 'reject')) break;
+          link.fail(); w = null;
+        }
+      }
+      if (w && w.t === 'reject') { this.joinStatus(String(w.why || '참가할 수 없어요'), 'err'); link.fail(); return; }
+      if (!w) { this.joinStatus('방을 찾지 못했어요. 코드가 맞는지, 친구가 방을 열어 두었는지 확인해 주세요.', 'err'); return; }
+      this.joinStatus('월드를 받는 중…', 'ok');
+      this.startClient(link, w, code);
+    } finally {
+      this.joining = false; $('mpj-go').disabled = false;
+    }
+  }
+  tryP2P(code) {
+    return mpLoadPeer().then((Peer) => new Promise((res, rej) => {
+      const peer = new Peer(Object.assign({ debug: 0 }, MP_CFG.peer));
+      let opened = false;
+      const to = setTimeout(() => { if (!opened) { try { peer.destroy(); } catch (e) { /* ignore */ } rej(new Error('timeout')); } }, 11000);
+      peer.on('open', () => {
+        const conn = peer.connect('bwv1-' + code, { reliable: true, serialization: 'raw' });
+        conn.on('open', () => {
+          opened = true; clearTimeout(to);
+          const L = new MPLink('p2p', (s) => conn.send(s), () => { try { conn.close(); } catch (e) { /* ignore */ } setTimeout(() => { try { peer.destroy(); } catch (e) { /* ignore */ } }, 300); });
+          conn.on('data', (d) => L.recv(d));
+          conn.on('close', () => L.fail());
+          conn.on('error', () => L.fail());
+          res(L);
+        });
+      });
+      peer.on('error', (e) => { if (opened) return; clearTimeout(to); try { peer.destroy(); } catch (x) { /* ignore */ } rej(e); });
+    }));
+  }
+  async tryRelay(code, url) {
+    const mq = new MiniMQTT(url);
+    await mq.connect();
+    const cid = Math.random().toString(36).slice(2, 12).padEnd(8, '0');
+    const base = `bwv1/${code}/`;
+    const L = new MPLink('relay', (x) => mq.publish(base + 'h/' + cid, x), () => setTimeout(() => mq.close(), 300));
+    mq.onmessage = (topic, s) => { if (topic === base + 'c/' + cid) L.recv(s); };
+    mq.onclose = () => L.fail();
+    await mq.subscribe(base + 'c/' + cid);
+    return L;
+  }
+  handshake(L, ms) {
+    return new Promise((res) => {
+      const to = setTimeout(() => { L.onmsg = null; res(null); }, ms);
+      L.onmsg = (m) => { if (m.t === 'welcome' || m.t === 'reject') { clearTimeout(to); L.onmsg = null; res(m); } };
+      L.onclose = () => { clearTimeout(to); res(null); };
+      L.send({ t: 'hello', v: MP_PROTO, name: this.myName });
+    });
+  }
+  startClient(L, w, code) {
+    const g = this.g;
+    const meta = w.meta || {};
+    if (!Number.isFinite(meta.seed)) { L.fail(); this.joinStatus('월드 정보를 받지 못했어요', 'err'); return; }
+    this.role = 'client'; this.code = code; this.link = L; this.myId = w.id; this.myColor = w.color;
+    this.players.clear(); this.outE.length = 0;
+    const add = (id, name, color) => { if (id === this.myId || this.players.has(id)) return; this.players.set(id, { id, name: mpName(name), color: color | 0, av: new MPAvatar(g, mpName(name), color | 0) }); };
+    add(0, (w.host && w.host.name) || '방장', (w.host && w.host.color) || MP_COLORS[0]);
+    for (const o of w.players || []) add(o.id, o.name, o.color);
+    L.onmsg = (m) => this.onClientMsg(m);
+    L.onclose = () => this.lost('방장과의 연결이 끊겼어요');
+    const sp = Array.isArray(w.spawn) && w.spawn.every(Number.isFinite) ? w.spawn : null;
+    const mode = meta.mode === 'creative' ? 'creative' : 'survival';
+    const ang = Math.random() * Math.PI * 2;
+    const px = sp ? sp[0] + Math.cos(ang) * 1.5 : 0, pz = sp ? sp[2] + Math.sin(ang) * 1.5 : 0;
+    const inv = new Array(36).fill(null);
+    if (mode === 'creative') DEFAULT_HOTBAR.forEach((k, i) => { inv[i] = { id: B[k], n: 1 }; });
+    g.mpBoot = {
+      v: 1, meta: { id: 'mp-' + code, name: String(meta.name || '친구의 월드').slice(0, 24), seed: meta.seed >>> 0, seedText: String(meta.seedText || meta.seed), mode, type: ['normal', 'flat', 'adventure'].includes(meta.type) ? meta.type : 'normal', created: Date.now() },
+      mode, time: Number.isFinite(w.time) ? w.time : 0.1, spawn: [px, sp ? sp[1] : 80, pz],
+      player: { x: px, y: sp ? sp[1] : 80, z: pz, yaw: ang + Math.PI / 2, pitch: -0.1, flying: false, health: 20, food: 20, sat: 5 },
+      inv, sel: 0, edits: w.edits || {}, containers: {}, adv: { mp: true },
+    };
+    try { g.startWorld('mp-' + code, null); } finally { g.mpBoot = null; }
+    if (!g.world) { this.reset(); return; }
+    g.needSpawnFix = true; // land on solid ground next to the host
+    this.attachWorld();
+    this.applyTime(w);
+    this.note(`${this.players.get(0).name} 님의 방에 들어왔어요`, MP_COLORS[0]);
+    this.renderHUD();
+  }
+  onClientMsg(m) {
+    if (this.role !== 'client') return;
+    switch (m.t) {
+      case 'S':
+        if (!Array.isArray(m.p)) break;
+        for (const r of m.p) { if (!Array.isArray(r)) continue; const pl = this.players.get(r[0]); if (pl) pl.av.set(r.slice(1)); }
+        break;
+      case 'b': this.applyEdits(m.e); break;
+      case 'T': this.applyTime(m); break;
+      case 'join':
+        if (Number.isInteger(m.id) && !this.players.has(m.id) && m.id !== this.myId) {
+          const name = mpName(m.name), color = m.color | 0;
+          this.players.set(m.id, { id: m.id, name, color, av: new MPAvatar(this.g, name, color) });
+          this.note(`${name} 님이 들어왔어요`, color); this.renderHUD(); this.renderHost();
+        }
+        break;
+      case 'leave': {
+        const pl = this.players.get(m.id);
+        if (pl && m.id !== 0) { pl.av.dispose(); this.players.delete(m.id); this.note(`${pl.name} 님이 나갔어요`, pl.color); this.renderHUD(); this.renderHost(); }
+        break;
+      }
+      case 'chat': this.showChat(mpName(m.n), m.c | 0, String(m.x || '').slice(0, 120)); break;
+      case 'end': this.lost('방장이 방을 닫았어요'); break;
+    }
+  }
+  applyTime(m) {
+    const g = this.g;
+    if (Number.isFinite(m.time)) {
+      // nudge small drift, jump on big changes (sleeping, /time)
+      let d = m.time - g.time; if (d > 0.5) d -= 1; if (d < -0.5) d += 1;
+      g.time = Math.abs(d) > 0.01 ? ((m.time % 1) + 1) % 1 : (g.time + d * 0.5 + 1) % 1;
+    }
+    if (Number.isFinite(m.wt)) { g.weather.target = clamp(m.wt, 0, 1); g.weather.timer = 1e9; }
+    if (Number.isFinite(m.wl) && Math.abs(m.wl - g.weather.level) > 0.3) g.weather.level = clamp(m.wl, 0, 1);
+  }
+  lost(why) {
+    if (this.role !== 'client') return;
+    this.reset();
+    const g = this.g;
+    if (g.meta) { g.quitToTitle(); }
+    g.ui.toast(why, 4000);
+  }
+
+  // ---------------------------------------------------------------- leaving
+  stop() { // host closes the room
+    if (this.role !== 'host') return;
+    for (const pl of this.players.values()) { pl.link.send({ t: 'end' }); const L = pl.link; setTimeout(() => L.close(), 250); }
+    this.reset();
+  }
+  leave() { // guest leaves
+    if (this.role !== 'client') return;
+    if (this.link) this.link.close();
+    this.reset();
+  }
+  reset() {
+    const peer = this.peer, relays = this.relays;
+    this.peer = null; this.relays = [];
+    setTimeout(() => { if (peer) { try { peer.destroy(); } catch (e) { /* ignore */ } } for (const r of relays) r.close(); }, 400);
+    for (const pl of this.players.values()) { pl.av.dispose(); if (pl.link) pl.link.onclose = null; }
+    if (this.link) { this.link.onclose = null; this.link.onmsg = null; }
+    this.players.clear(); this.link = null; this.role = null; this.code = ''; this.outE.length = 0;
+    this.p2pUp = false; this.relayUp = 0;
+    if (this.g.world) this.g.world.onNet = null;
+    this.renderHost(); this.renderHUD();
+  }
+
+  // ---------------------------------------------------------------- the network tick (runs even while paused)
+  myState() {
+    const g = this.g, p = g.player, r = (v) => Math.round(v * 100) / 100;
+    const fl = (p.sneaking ? 1 : 0) | (p.flying ? 2 : 0) | (g.state === 'dead' || g.state === 'loading' ? 4 : 0);
+    return [r(p.x), r(p.y), r(p.z), r(p.yaw), r(p.pitch), r(p.vx || 0), r(p.vz || 0), fl, g.swingSeq || 0];
+  }
+  flushEdits() {
+    const E = this.outE;
+    if (!E.length) return;
+    if (this.role === 'host') {
+      for (const pl of this.players.values()) {
+        const out = [];
+        for (let j = 0; j < E.length; j += 5) if (E[j] !== pl.id) out.push(E[j + 1], E[j + 2], E[j + 3], E[j + 4]);
+        if (out.length) pl.link.send({ t: 'b', e: out });
+      }
+    } else if (this.role === 'client' && this.link) {
+      const out = [];
+      for (let j = 0; j < E.length; j += 5) out.push(E[j + 1], E[j + 2], E[j + 3], E[j + 4]);
+      this.link.send({ t: 'b', e: out });
+    }
+    E.length = 0;
+  }
+  tick() {
+    if (!this.role) return;
+    const g = this.g;
+    if (!g.world || !g.meta) { if (this.role === 'host') this.stop(); else this.leave(); return; }
+    this.flushEdits();
+    const t = now();
+    if (t - this.stT >= 100) {
+      this.stT = t;
+      const mine = this.myState();
+      if (this.role === 'host') {
+        const all = [[0, ...mine]];
+        for (const pl of this.players.values()) if (pl.st) all.push([pl.id, ...pl.st]);
+        for (const pl of this.players.values()) pl.link.send({ t: 'S', p: all.filter((r) => r[0] !== pl.id) });
+      } else if (this.link) this.link.send({ t: 's', a: mine });
+    }
+    if (this.role === 'host' && t - this.timeT >= 2000) this.sendTime();
+    // drop anyone (or the host) we haven't heard from in a while
+    if (this.role === 'host') { for (const pl of [...this.players.values()]) if (t - pl.link.last > MP_TIMEOUT) pl.link.fail(); }
+    else if (this.link && t - this.link.last > MP_TIMEOUT) this.link.fail();
+  }
+  sendTime() {
+    if (this.role !== 'host') return;
+    this.timeT = now();
+    const g = this.g, m = { t: 'T', time: Math.round(g.time * 1e5) / 1e5, wl: Math.round(g.weather.level * 100) / 100, wt: g.weather.target };
+    for (const pl of this.players.values()) pl.link.send(m);
+  }
+  updateAvatars(dt) {
+    if (!this.players.size) return;
+    const st = this.g.state, vis = st !== 'title' && st !== 'loading';
+    for (const pl of this.players.values()) pl.av.update(dt, vis);
+  }
+
+  // ---------------------------------------------------------------- chat
+  chat(text) {
+    text = String(text).slice(0, 120).trim();
+    if (!text || !this.role) return;
+    const color = this.role === 'host' ? MP_COLORS[0] : this.myColor;
+    this.showChat(this.myName, color, text);
+    if (this.role === 'host') for (const pl of this.players.values()) pl.link.send({ t: 'chat', n: this.myName, c: color, x: text });
+    else if (this.link) this.link.send({ t: 'chat', x: text });
+  }
+  showChat(name, color, text) {
+    const el = document.createElement('div');
+    el.className = 'chat';
+    el.innerHTML = `<b style="color:${mpHex(color & 0xffffff)}">${mpEsc(name)}</b> ${mpEsc(text)}`;
+    const log = $('cmd-log'); log.appendChild(el);
+    while (log.children.length > 7) log.removeChild(log.firstChild);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }, 9000);
+    if (this.g.sound) this.g.sound.play('click');
+  }
+  note(text, color) {
+    const el = document.createElement('div');
+    el.className = 'chat';
+    el.innerHTML = `<b style="color:${mpHex((color || 0xffe08a) & 0xffffff)}">●</b> ${mpEsc(text)}`;
+    const log = $('cmd-log'); log.appendChild(el);
+    while (log.children.length > 7) log.removeChild(log.firstChild);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }, 6000);
+  }
+
+  // ---------------------------------------------------------------- UI
+  bindUI() {
+    const g = this.g;
+    const keep = (id) => { const el = $(id); el.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.code === 'Enter') { e.preventDefault(); if (id.startsWith('mpj')) this.join($('mpj-code').value, $('mpj-name').value); else if (!this.role) this.openHost(); } }); el.addEventListener('keyup', (e) => e.stopPropagation()); };
+    for (const id of ['mpj-name', 'mpj-code', 'mph-name']) keep(id);
+    $('mpj-code').addEventListener('input', (e) => { const v = mpCodeNorm(e.target.value); if (e.target.value !== v) e.target.value = v; });
+    $('scr-title').addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b && b.dataset.act === 'mp') this.openJoin(); });
+    $('scr-pause').addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b && b.dataset.act === 'mp') { g.ui.show('mphost'); this.renderHost(); } });
+    const on = (scr, fn) => $(scr).addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (!b) return; g.sound.init(); g.sound.play('click'); fn(b.dataset.act); });
+    on('scr-mpjoin', (a) => {
+      if (a === 'join') this.join($('mpj-code').value, $('mpj-name').value);
+      else if (a === 'back') { if (!this.joining) g.ui.show('title'); }
+    });
+    on('scr-mphost', (a) => {
+      if (a === 'open') this.openHost();
+      else if (a === 'close') { if (this.role === 'host') { this.stop(); g.ui.toast('방을 닫았어요'); } else if (this.role === 'client') { this.leave(); g.quitToTitle(); } }
+      else if (a === 'copy') this.copyCode();
+      else if (a === 'back') { g.ui.show('pause'); g.ui.updatePause(); }
+    });
+    const tc = $('t-chat');
+    const openChat = (e) => { e.preventDefault(); e.stopPropagation(); if (g.state === 'playing' && this.role) g.openCommand(''); };
+    tc.addEventListener('touchstart', openChat, { passive: false });
+    tc.addEventListener('click', openChat);
+  }
+  openJoin() {
+    $('mpj-name').value = this.myName;
+    this.joinStatus('');
+    this.g.ui.show('mpjoin');
+  }
+  openHost() {
+    const n = $('mph-name').value;
+    this.myName = mpName(n); store.set('bw.mpname', this.myName);
+    this.host();
+  }
+  copyCode() {
+    const t = this.code; if (!t) return;
+    const ok = () => this.g.ui.toast('방 코드를 복사했어요: ' + t);
+    try { navigator.clipboard.writeText(t).then(ok, () => this.g.ui.toast('방 코드: ' + t, 4000)); } catch (e) { this.g.ui.toast('방 코드: ' + t, 4000); }
+  }
+  joinStatus(text, kind) {
+    const el = $('mpj-status');
+    el.textContent = text; el.className = 'mpstat' + (kind ? ' ' + kind : '') + (text ? '' : ' hidden');
+  }
+  renderHost() {
+    const off = $('mph-off'), on = $('mph-on');
+    if (!off) return;
+    off.classList.toggle('hidden', !!this.role);
+    on.classList.toggle('hidden', !this.role);
+    $('mph-name').value = this.myName;
+    if (!this.role) return;
+    $('mph-code').textContent = this.code || '······';
+    $('mph-copy').classList.toggle('hidden', this.role !== 'host');
+    $('mph-codelbl').textContent = this.role === 'host' ? '방 코드' : '참가한 방';
+    $('mph-close').textContent = this.role === 'host' ? '방 닫기' : '방 나가기';
+    const st = $('mph-status');
+    if (this.role === 'host') {
+      const up = this.p2pUp || this.relayUp > 0;
+      st.className = 'mpstat ' + (up ? 'ok' : '');
+      st.textContent = up ? '친구에게 코드를 알려 주세요. 친구는 첫 화면의 "친구와 함께"에서 입력하면 돼요.' : '방을 여는 중… (인터넷 연결이 필요해요)';
+      if (!up && this._openedAt && now() - this._openedAt > 12000) { st.className = 'mpstat err'; st.textContent = '연결 서버에 닿지 못했어요. 인터넷 연결을 확인하고 방을 다시 열어 주세요.'; }
+    } else { st.className = 'mpstat ok'; st.textContent = '방장의 월드에서 함께 플레이 중이에요. 이 월드는 방장 기기에 저장돼요.'; }
+    const rows = [];
+    const meColor = this.role === 'host' ? MP_COLORS[0] : this.myColor;
+    rows.push(`<div><i style="background:${mpHex(meColor)}"></i>${mpEsc(this.myName)}<small>나${this.role === 'host' ? ' · 방장' : ''}</small></div>`);
+    for (const pl of this.players.values()) rows.push(`<div><i style="background:${mpHex(pl.color)}"></i>${mpEsc(pl.name)}<small>${pl.id === 0 && this.role === 'client' ? '방장' : (pl.link ? (pl.link.kind === 'p2p' ? '직접 연결' : '중계 연결') : '')}</small></div>`);
+    $('mph-list').innerHTML = rows.join('');
+  }
+  renderHUD() {
+    const el = $('mp-hud');
+    const tc = $('t-chat');
+    if (!this.role) { el.classList.add('hidden'); tc.classList.add('hidden'); this.placeholder(false); return; }
+    el.classList.remove('hidden'); tc.classList.remove('hidden');
+    const n = this.players.size + 1;
+    const meColor = this.role === 'host' ? MP_COLORS[0] : this.myColor;
+    let h = `<div>🌐 <b>${mpEsc(this.code)}</b> · ${n}명</div><div><i style="background:${mpHex(meColor)}"></i>${mpEsc(this.myName)}</div>`;
+    let k = 0;
+    for (const pl of this.players.values()) {
+      if (++k > 3 && this.players.size > 4) { h += `<div>외 ${this.players.size - 3}명</div>`; break; }
+      h += `<div><i style="background:${mpHex(pl.color)}"></i>${mpEsc(pl.name)}${pl.id === 0 && this.role === 'client' ? ' 👑' : ''}</div>`;
+    }
+    el.innerHTML = h;
+    this.placeholder(true);
+  }
+  placeholder(mp) {
+    const inp = $('cmd-input');
+    if (!this._ph) this._ph = inp.placeholder;
+    inp.placeholder = mp ? '친구에게 메시지 보내기 (명령어는 / 로 시작)' : this._ph;
+  }
+}
+
+// ------------------------------------------------------------------ hooks into the game
+{
+  const G = Game.prototype;
+  const init = G.init;
+  G.init = function () { init.call(this); this.mp = new Multiplayer(this); };
+  // edits made while the player is acting are the ones a guest shares
+  const updatePlay = G.updatePlay;
+  G.updatePlay = function (dt) { this.mpCapture = true; try { updatePlay.call(this, dt); } finally { this.mpCapture = false; } };
+  const runCommand = G.runCommand;
+  G.runCommand = function (line) {
+    if (this.mp && this.mp.active && !line.startsWith('/')) { this.mp.chat(line); return; }
+    if (this.mp && this.mp.role === 'client' && /^\/(time|weather|날씨|시간)\b/i.test(line)) { this.cmdLog('시간과 날씨는 방장만 바꿀 수 있어요', true); return; }
+    this.mpCapture = true;
+    try { runCommand.call(this, line); } finally { this.mpCapture = false; }
+    if (this.mp && this.mp.role === 'host') this.mp.sendTime();
+  };
+  const updateCamera = G.updateCamera;
+  G.updateCamera = function (dt) { updateCamera.call(this, dt); if (this.mp) this.mp.updateAvatars(dt); };
+  const setTime = G.setTime;
+  G.setTime = function (t) {
+    if (this.mp && this.mp.role === 'client') { this.ui.toast('시간은 방장만 바꿀 수 있어요'); return; }
+    setTime.call(this, t);
+    if (this.mp && this.mp.role === 'host') this.mp.sendTime();
+  };
+  const quit = G.quitToTitle;
+  G.quitToTitle = function () {
+    if (this.mp) { if (this.mp.role === 'host') this.mp.stop(); else if (this.mp.role === 'client') this.mp.leave(); }
+    quit.call(this);
+  };
+  const startWorld = G.startWorld;
+  G.startWorld = function (id, fresh) {
+    if (this.mp && this.mp.role === 'host' && !this.mpBoot) this.mp.stop();
+    return startWorld.call(this, id, fresh);
+  };
+  // the sleep skip and night/day buttons move the shared clock, so tell guests at once
+  const updateSleep = G.updateSleep;
+  G.updateSleep = function (dt) { const t0 = this.time; updateSleep.call(this, dt); if (this.mp && this.mp.role === 'host' && Math.abs(this.time - t0) > 0.05) this.mp.sendTime(); };
+  const handleUIKey = G.handleUIKey;
+  G.handleUIKey = function (code, e) {
+    if (code === 'Escape' && this.ui.cur === 'mphost') { this.ui.show('pause'); this.ui.updatePause(); return true; }
+    if (code === 'Escape' && this.ui.cur === 'mpjoin' && this.mp && !this.mp.joining) { this.ui.show('title'); return true; }
+    return handleUIKey.call(this, code, e);
+  };
+  const U = UI.prototype;
+  const updatePause = U.updatePause;
+  U.updatePause = function () {
+    updatePause.call(this);
+    const mp = this.g.mp, client = mp && mp.role === 'client';
+    $('pause-quit').textContent = client ? '방 나가기' : '저장하고 나가기';
+    const b = $('pause-mp');
+    b.lastChild.textContent = !mp || !mp.role ? '친구 초대 · 멀티플레이' : mp.role === 'host' ? `멀티플레이 · 방 ${mp.code} (${mp.players.size + 1}명)` : `멀티플레이 · ${mp.players.size + 1}명 참가 중`;
+  };
 }
 
 // ---- 99_boot.js
