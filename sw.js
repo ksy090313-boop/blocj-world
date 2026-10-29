@@ -1,5 +1,5 @@
 // 블록 월드 service worker — 앱 파일을 저장해 오프라인에서도 실행되게 합니다
-const CACHE = 'bw-7a2a282d44';
+const CACHE = 'bw-85a0399722';
 const CORE = ["./", "./index.html", "./three.module.min.js", "./manifest.webmanifest", "./fonts/fonts.css", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png", "./fonts/do-hyeon.woff2", "./fonts/black-han-sans.woff2"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
