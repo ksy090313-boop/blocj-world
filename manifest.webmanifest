@@ -1,6 +1,6 @@
 {
-  "name": "블록 월드",
-  "short_name": "블록 월드",
+  "name": "승연크래프트",
+  "short_name": "승연크래프트",
   "description": "코드로 만든 오리지널 복셀 샌드박스 게임",
   "start_url": "./",
   "scope": "./",
