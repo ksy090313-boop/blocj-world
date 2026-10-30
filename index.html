@@ -439,7 +439,7 @@ body.talking #armor-hud{visibility:hidden}
     <button class="btn" data-act="settings"><svg viewBox="0 0 24 24"><g fill="#fff"><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(0 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(45 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(90 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(135 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(180 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(225 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(270 12 12)"/><rect x="10.4" y="1.6" width="3.2" height="4.4" rx="0.8" transform="rotate(315 12 12)"/></g><circle cx="12" cy="12" r="5.6" fill="none" stroke="#fff" stroke-width="3.4"/></svg>설정</button>
     <button class="btn" data-act="help"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2a10 10 0 110 20 10 10 0 010-20zm0 14.5a1.3 1.3 0 100 2.6 1.3 1.3 0 000-2.6zM12 5.5c-2.3 0-4 1.5-4 3.6h2.4c0-.8.7-1.4 1.6-1.4s1.6.6 1.6 1.4c0 1.6-2.8 1.6-2.8 4.4h2.4c0-1.9 2.8-2.2 2.8-4.6 0-2-1.7-3.4-4-3.4z"/></svg>조작법</button>
   </div>
-  <div class="ver">승연크래프트 · 버전 v1.11</div>
+  <div class="ver">승연크래프트 · 버전 v1.11.1</div>
   <div class="foot">특정 게임과 무관한 오리지널 복셀 샌드박스 · 모든 텍스처와 소리는 코드로 생성됩니다</div>
 </div>
 
@@ -8735,7 +8735,7 @@ class Game {
     const facing = ['북(-Z)', '서(-X)', '남(+Z)', '동(+X)'][((Math.round(p.yaw / (Math.PI / 2)) % 4) + 4) % 4];
     const tg = this.target ? `${BLOCKS[this.target.id].name} (${this.target.x}, ${this.target.y}, ${this.target.z})` : '-';
     this.ui.setDebug(
-      `승연크래프트 v1.11   ${this.fps} fps\n` +
+      `승연크래프트 v1.11.1   ${this.fps} fps\n` +
       `XYZ  ${p.x.toFixed(2)} / ${p.y.toFixed(2)} / ${p.z.toFixed(2)}\n` +
       `블록 ${bx} ${by} ${bz}   청크 ${bx >> 4} ${bz >> 4}\n` +
       `방향 ${facing}   바이옴 ${BIOME_NAMES[w.biomeAt(bx, bz)] || '-'}\n` +
@@ -11318,6 +11318,14 @@ const ARMOR_HALF = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='ht
   const M = MobManager.prototype;
   const update = M.update;
   M.update = function (dt) { update.call(this, dt); this.villageTick(dt); };
+  M.vAlive = function () { const a = new Set(); for (const m of this.list) if (m.vslot && m.dying === undefined) a.add(m.vslot); return a; };
+  M.vSlotFree = function (key, x, z) {
+    const t = this.vDead && this.vDead.get(key);
+    if (t === undefined) return true;
+    const p = this.g.player;
+    if (now() - t < 90000 || Math.hypot(p.x - x, p.z - z) < 24) return false;
+    this.vDead.delete(key); return true;
+  };
   M.villageTick = function (dt) {
     this.vT = (this.vT || 0) + dt;
     if (this.vT < 2) return;
@@ -11330,7 +11338,9 @@ const ARMOR_HALF = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='ht
     const groundAt = (x, z, y0) => { for (let y = y0 + 3; y > y0 - 6; y--) if (SOL[w.getBlock(x, y - 1, z)] && !SOL[w.getBlock(x, y, z)] && !SOL[w.getBlock(x, y + 1, z)]) return y; return -1; };
     for (const v of g.gen.villagesNear(p.x, p.z, 70)) {
       if (Math.hypot(v.x - p.x, v.z - p.z) > 78 || !ready(v.x, v.z)) continue;
-      if (!this.list.some((m) => m.village === v.id && m.def.villager)) {
+      {
+        // one slot per job: a missing villager is refilled (right away if it was just out of range,
+        // after a while and out of sight if it died), so a village never stays empty
         const jobs = [];
         for (const b of v.buildings) {
           const hsh = (b.seed >>> 3) % 3;
@@ -11340,15 +11350,18 @@ const ARMOR_HALF = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='ht
           else if (b.type === 'house_s') jobs.push([['farmer', 'carpenter', 'cook'][hsh], b]);
           else if (b.type === 'house_m') jobs.push([['cook', 'farmer', 'carpenter'][hsh], b], [['carpenter', 'cook', 'farmer'][hsh], b]);
         }
-        for (const [job, b] of jobs) {
+        const alive = this.vAlive();
+        jobs.forEach(([job, b], idx) => {
+          const key = v.id + '|' + idx;
+          if (alive.has(key) || !this.vSlotFree(key, b.door[0], b.door[2])) return;
           const [x, , z] = b.door;
-          if (!ready(x, z)) continue;
+          if (!ready(x, z)) return;
           const y = groundAt(x, z, b.y - 1);
-          if (y < 0) continue;
+          if (y < 0) return;
           const m = new Mob('villager', x + 0.5 + (Math.random() - 0.5) * 0.6, y, z + 0.5 + (Math.random() - 0.5) * 0.6, this.R, g.renderer.scene, { variant: JOB_VARIANT[job], home: { x: v.x, z: v.z, r: 26 }, village: v.id });
-          m.job = job;
+          m.job = job; m.vslot = key;
           this.list.push(m);
-        }
+        });
       }
       for (const b of v.buildings) {
         const key = v.id + '|' + b.x + '|' + b.z;
@@ -13322,18 +13335,22 @@ const PET_NAMES = { cat: ['나비', '치즈', '까망이', '모모', '두부', '
     if (!g.meta || !g.gen || g.state === 'loading') return;
     if (!this.kidsDone) this.kidsDone = new Set();
     for (const v of g.gen.villagesNear(p.x, p.z, 70)) {
-      if (Math.hypot(v.x - p.x, v.z - p.z) > 78 || this.kidsDone.has(v.id)) continue;
+      if (Math.hypot(v.x - p.x, v.z - p.z) > 78) continue;
       const c = w.getChunk(v.x >> 4, v.z >> 4);
       if (!c || c.state !== ST_MESH) continue;
-      this.kidsDone.add(v.id);
       const spot = (x, z) => { for (let y = v.y + 6; y > v.y - 6; y--) if (SOL[w.getBlock(x, y - 1, z)] && !SOL[w.getBlock(x, y, z)] && !SOL[w.getBlock(x, y + 1, z)] && !LIQ[w.getBlock(x, y, z)]) return y; return -1; };
+      const alive = this.vAlive();
       for (let k = 0; k < 3; k++) {
+        const key = v.id + '|kid' + k;
+        if (alive.has(key) || !this.vSlotFree(key, v.x, v.z + 6)) continue;
         const x = v.x + Math.floor((Math.random() - 0.5) * 10), z = v.z + 4 + Math.floor(Math.random() * 5), y = spot(x, z);
         if (y < 0) continue;
         const m = new Mob('villager', x + 0.5, y, z + 0.5, this.R, g.renderer.scene, { variant: Math.floor(Math.random() * 5), baby: 1e9, home: { x: v.x, z: v.z, r: 18 }, village: v.id });
-        m.kid = true; m.job = null;
+        m.kid = true; m.job = null; m.vslot = key;
         this.list.push(m);
       }
+      if (this.kidsDone.has(v.id)) continue;
+      this.kidsDone.add(v.id);
       for (let k = 0; k < 2; k++) {
         const b = v.buildings[Math.floor(Math.random() * v.buildings.length)], x = b.door[0], z = b.door[2], y = spot(x, z);
         if (y > 0) this.list.push(new Mob('cat', x + 0.5, y, z + 0.5, this.R, g.renderer.scene));
@@ -13344,6 +13361,12 @@ const PET_NAMES = { cat: ['나비', '치즈', '까망이', '모모', '두부', '
 
 {
   const G = Game.prototype;
+  // a villager that died is refilled later, out of sight
+  const mobDied = G.mobDied;
+  G.mobDied = function (m) {
+    if (m.vslot) { const M = this.mobs; if (!M.vDead) M.vDead = new Map(); M.vDead.set(m.vslot, now()); }
+    return mobDied.call(this, m);
+  };
   // bring pets back when the world loads
   const updateLoading = G.updateLoading;
   G.updateLoading = function () {
